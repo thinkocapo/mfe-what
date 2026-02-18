@@ -1,0 +1,20 @@
+{
+  "name": "mfe-header",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/mfe-header/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm dev", "cwd": "apps/mfe-header" }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm build", "cwd": "apps/mfe-header" }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm preview", "cwd": "apps/mfe-header" }
+    }
+  }
+}

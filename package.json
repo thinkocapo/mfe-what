@@ -1,0 +1,20 @@
+{
+  "name": "mfe-what",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "build:remotes": "nx run-many --target=build --projects=mfe-header,mfe-one,mfe-two,mfe-three,mfe-four --parallel=5",
+    "start:remotes": "nx run-many --target=preview --projects=mfe-header,mfe-one,mfe-two,mfe-three,mfe-four --parallel=5",
+    "start:shell": "nx run shell:serve",
+    "build": "nx run-many --target=build --all",
+    "dev": "bash start.sh"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "nx", "@sentry/cli"]
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nx": "^22.5.1",
+    "typescript": "^5.4.0"
+  }
+}

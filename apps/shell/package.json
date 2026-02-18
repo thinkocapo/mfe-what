@@ -1,0 +1,26 @@
+{
+  "name": "@mfe-what/shell",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 4000",
+    "build": "vite build",
+    "preview": "vite preview --port 4000"
+  },
+  "dependencies": {
+    "@sentry/browser": "^8.36.0",
+    "@sentry/react": "^8.36.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "@originjs/vite-plugin-federation": "^1.3.5",
+    "typescript": "^5.4.0",
+    "vite": "^5.4.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "mfe-one",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/mfe-one/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm dev", "cwd": "apps/mfe-one" }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm build", "cwd": "apps/mfe-one" }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm preview", "cwd": "apps/mfe-one" }
+    }
+  }
+}
