@@ -2,6 +2,13 @@
 
 5-MFE microfrontend monorepo — React + Vite + pnpm + Nx + Module Federation + Sentry
 
+<img src="app.png" width="75%" />
+
+<div>
+  <img src="trace.png" width="37%" />
+  <img src="spans.png" width="37%" />
+</div>
+
 ## Layout
 
 ```
