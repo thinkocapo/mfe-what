@@ -97,3 +97,46 @@ pnpm build:remotes
   - `Sentry.withProfiler(App)` — component profiling
   - `Sentry.ErrorBoundary` — wraps each remote, reports errors
   - `Sentry.addBreadcrumb` — fires on every MFE refresh action
+
+---
+
+## Why spans from all 5 microfrontends appear in a single trace and a single Project in Sentry
+
+Each MFE has its own `SENTRY_DSN` configured, but in practice all spans end up under one trace and are sent to one Sentry project. This is by design in the browser SDK, not a bug or misconfiguration.
+
+### One browser context, one Sentry client, one active trace
+
+Module Federation loads all 5 MFE bundles into the **same browser window and JavaScript runtime**. Only the shell calls `Sentry.init()`, which creates a single Sentry client attached to `window.__SENTRY__`. All MFEs inherit this client — they have no init call of their own and no way to register a separate one in the same browsing context.
+
+When the page loads, `reactRouterV6BrowserTracingIntegration` creates exactly **one root span** with one `trace_id`:
+
+- A `pageload` span — starts immediately at page load
+- A `navigation` span — created on each route change
+
+That's it. All 5 MFEs render as children of whichever root span is active. Their component render spans, HTTP spans, and any other auto-instrumented spans all share the same `trace_id` and get bundled into the same transaction envelope, which is sent to the shell's DSN.
+
+The browser SDK was designed around the single-app model. There is no API to maintain 5 concurrent root spans with a single `Sentry.init()`.
+
+### Why errors route correctly but spans do not
+
+Error events route to the correct MFE project because `@sentry/vite-plugin` injects `moduleMetadata` (including the MFE's DSN) into each MFE's compiled JavaScript bundle at build time. When an error is thrown inside an MFE, the stack frames reference that MFE's code, and the shell's `makeMultiplexedTransport` walks those frames to find the DSN and routes the error accordingly.
+
+Spans have no stack frames and no `moduleMetadata`. A `pageload` or `navigation` transaction contains spans from all 5 MFEs interleaved, and there is nothing in the span data to identify which MFE "owns" it. The transport has no signal to route by, so the transaction falls through to the shell's fallback DSN.
+
+### What was attempted and why it did not work
+
+`Sentry.setTag('mfe_dsn', dsn)` was added to each MFE's root component via a `useEffect`, with the transport extended to read that tag off the transaction event and route to the corresponding DSN.
+
+This failed for two reasons:
+
+1. **Race condition.** All 5 MFEs mount during the same render cycle. Each one's `useEffect` fires and calls `setTag`, overwriting the previous value on the shared global scope. The last MFE to mount wins — which is why the `navigation` transaction appeared under `mfe-four` rather than consistently routing to any one MFE.
+
+2. **Timing of the pageload transaction.** The `pageload` transaction starts immediately at page load and finishes before most `useEffect`s have fired. By the time any MFE sets `mfe_dsn`, the pageload envelope has already been assembled and queued, so it never picks up the tag and falls through to the shell's DSN.
+
+### The actual constraint
+
+The browser SDK maintains **one active trace per browsing context**. To get truly separate traces and separate Sentry projects per MFE, each MFE would need its own isolated browsing context (e.g. an iframe) or its own `BrowserClient` instance with fully custom, manual span instrumentation — neither of which is compatible with standard Module Federation auto-instrumentation.
+
+### What this repo does instead
+
+Errors are routed per-MFE project via `module_metadata` + `makeMultiplexedTransport` (works correctly). Spans all go to the shell's project as a single shared trace. The `mfe.name` span attribute set in `withMfeTag` (see `apps/shell/src/App.tsx`) allows filtering spans by MFE within that trace in the Sentry UI using `mfe.name:mfe-two`.
