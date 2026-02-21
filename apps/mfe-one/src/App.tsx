@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface Props {
   onRefresh?: (name: string) => void;
@@ -12,6 +12,10 @@ const remotes = [
 ];
 
 function MfeOne({ onRefresh }: Props) {
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/posts/1');
+  }, []);
+
   return (
     <div>
       <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.15em' }}>

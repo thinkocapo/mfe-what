@@ -140,3 +140,49 @@ The browser SDK maintains **one active trace per browsing context**. To get trul
 ### What this repo does instead
 
 Errors are routed per-MFE project via `module_metadata` + `makeMultiplexedTransport` (works correctly). Spans all go to the shell's project as a single shared trace. The `mfe.name` span attribute set in `withMfeTag` (see `apps/shell/src/App.tsx`) allows filtering spans by MFE within that trace in the Sentry UI using `mfe.name:mfe-two`.
+
+---
+
+## Why HTTP spans are not nested under the MFE they occurred in
+
+Each MFE makes one `fetch()` call on mount (e.g. `mfe-three` hits `/todos/1`, `mfe-four` hits `/photos/1`). In the Sentry trace waterfall these HTTP spans appear as direct children of the root `pageload` transaction — siblings of the `mfe.render` spans, not children of them. Here is why.
+
+### Active span vs. inactive span
+
+`withMfeTag` creates each MFE's span using `Sentry.startInactiveSpan()`. The word "inactive" is the key: this API creates a span and attaches it to the trace, but it does **not** install itself as the **active span** in the OpenTelemetry async context. The async context is a call-stack-scoped storage that Sentry's auto-instrumentation reads to decide where to parent new spans.
+
+```
+Root pageload transaction   ← active span in OTel async context
+  └── mfe.render (mfe-three) ← created by startInactiveSpan, NOT active
+  └── mfe.render (mfe-four)  ← same
+```
+
+### What happens when `fetch()` is called
+
+When `fetch('https://jsonplaceholder.typicode.com/todos/1')` runs inside a `useEffect`, Sentry's fetch auto-instrumentation intercepts it and asks: "what is the currently active span?" The answer is the root `pageload` transaction, because that is the only span that was started with `startSpan` (or equivalent) and is therefore registered in the async context. The `mfe.render` span exists in the trace graph but is invisible to the async context lookup.
+
+Result: the HTTP span is parented to `pageload`, not to `mfe.render`.
+
+### The user's hypothesis — partially right
+
+> "Is it maybe due to the fact that when the SDK starts recording a span, it doesn't know what MFE it originated from?"
+
+The async context does not automatically associate a component's `useEffect` execution with any particular span. From the SDK's perspective, all five `useEffect` callbacks run in the same JavaScript event loop turn, all sharing the same active span (the root transaction). There is no automatic coupling between "this code is inside `MfeThree`" and "this code should parent spans to `mfe.render (mfe-three)`."
+
+### How you would fix it
+
+To nest an HTTP span under a specific MFE span, you must explicitly make that MFE span active for the duration of the call using `Sentry.withActiveSpan`:
+
+```tsx
+// in withMfeTag, inside useEffect:
+const span = Sentry.startInactiveSpan({ name: mfeName, op: 'mfe.render', attributes: { 'mfe.name': mfeName } });
+
+// then, wherever the MFE makes its fetch:
+Sentry.withActiveSpan(span, () => {
+  fetch('https://jsonplaceholder.typicode.com/todos/1');
+});
+```
+
+`withActiveSpan` temporarily sets the provided span as active in the async context for the duration of its callback. Any spans auto-instrumented inside that callback — including the fetch — will then be parented to it.
+
+In a Module Federation setup this is awkward because the shell creates the `mfe.render` span but the `fetch()` call lives inside the remote MFE bundle. Passing the span reference across the module boundary requires either a shared context object or a custom instrumentation hook, which is why the HTTP spans are left as siblings in this demo rather than nested.

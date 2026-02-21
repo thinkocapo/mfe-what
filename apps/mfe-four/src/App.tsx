@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const color = '#a78bfa';
 
 const items = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'];
 
 function MfeFour() {
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/photos/1');
+  }, []);
+
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [mountedAt] = useState(() => new Date().toLocaleTimeString());
 

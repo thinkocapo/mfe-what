@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface Props {
   onRefreshAll?: () => void;
@@ -17,6 +17,10 @@ const btn: React.CSSProperties = {
 };
 
 function MfeHeader({ onRefreshAll }: Props) {
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/users/1');
+  }, []);
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
       <div>

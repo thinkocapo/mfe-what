@@ -8,6 +8,10 @@ function MfeThree() {
   const [running, setRunning] = useState(true);
 
   useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/todos/1');
+  }, []);
+
+  useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);

@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const color = '#f472b6';
 
 function MfeTwo() {
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/albums/1');
+  }, []);
+
   const [count, setCount] = useState(0);
   const [mountedAt] = useState(() => new Date().toLocaleTimeString());
 

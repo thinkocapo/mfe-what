@@ -1,17 +1,21 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 
-// HOC: stamps the active Sentry span with an `mfe.name` attribute when the
-// MFE mounts. All MFEs share one pageload/navigation transaction, so this
-// doesn't route to separate projects — but it lets you filter spans by MFE
-// name inside Sentry (search `mfe.name:mfe-two`).
+// HOC: creates a child span for each MFE that lives as long as the component
+// is mounted. The span carries `mfe.name` as an attribute, making it visible
+// as a labelled span in Sentry's trace view (not just on the root transaction).
 function withMfeTag<P extends object>(
   Component: React.ComponentType<P>,
   mfeName: string,
 ): React.FC<P> {
   function MfeTagWrapper(props: P) {
     useEffect(() => {
-      Sentry.getActiveSpan()?.setAttribute('mfe.name', mfeName);
+      const span = Sentry.startInactiveSpan({
+        name: mfeName,
+        op: 'mfe.render',
+        attributes: { 'mfe.name': mfeName },
+      });
+      return () => { span.end(); };
     }, []);
     return <Component {...props} />;
   }
