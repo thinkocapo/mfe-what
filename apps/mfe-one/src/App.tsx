@@ -13,7 +13,7 @@ const remotes = [
 
 function MfeOne({ onRefresh }: Props) {
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/posts/1');
+    fetch('https://jsonplaceholder.typicode.com/todos/1');
   }, []);
 
   return (

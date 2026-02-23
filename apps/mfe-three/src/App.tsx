@@ -8,7 +8,7 @@ function MfeThree() {
   const [running, setRunning] = useState(true);
 
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/todos/1');
+    fetch('https://jsonplaceholder.typicode.com/todos/3');
   }, []);
 
   useEffect(() => {

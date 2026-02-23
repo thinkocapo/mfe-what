@@ -6,7 +6,7 @@ const items = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'];
 
 function MfeFour() {
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/photos/1');
+    fetch('https://jsonplaceholder.typicode.com/todos/4');
   }, []);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());

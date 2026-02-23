@@ -18,7 +18,7 @@ const btn: React.CSSProperties = {
 
 function MfeHeader({ onRefreshAll }: Props) {
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/users/1');
+    fetch('https://jsonplaceholder.typicode.com/todos/1');
   }, []);
 
   return (

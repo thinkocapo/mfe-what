@@ -1,54 +1,30 @@
-import React, { lazy, Suspense, useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import * as Sentry from '@sentry/react';
 
-// HOC: creates a child span for each MFE that lives as long as the component
-// is mounted. The span carries `mfe.name` as an attribute, making it visible
-// as a labelled span in Sentry's trace view (not just on the root transaction).
-function withMfeTag<P extends object>(
-  Component: React.ComponentType<P>,
-  mfeName: string,
-): React.FC<P> {
-  function MfeTagWrapper(props: P) {
-    useEffect(() => {
-      const span = Sentry.startInactiveSpan({
-        name: mfeName,
-        op: 'mfe.render',
-        attributes: { 'mfe.name': mfeName },
-      });
-      return () => { span.end(); };
-    }, []);
-    return <Component {...props} />;
-  }
-  MfeTagWrapper.displayName = mfeName;
-  return MfeTagWrapper;
-}
-
-// Remote MFEs loaded via Module Federation — each wrapped with:
-//   1. withMfeTag  → stamps the active span with mfe.name for filtering
-//   2. withProfiler → names the profiler span in Sentry
+// Remote MFEs loaded via Module Federation
 const MfeHeader = lazy(() =>
   import('mfe_header/App').then(m => ({
-    default: Sentry.withProfiler(withMfeTag(m.default, 'mfe-header'), { name: 'mfe-header' }),
+    default: Sentry.withProfiler(m.default, { name: 'mfe-header' }),
   }))
 );
 const MfeOne = lazy(() =>
   import('mfe_one/App').then(m => ({
-    default: Sentry.withProfiler(withMfeTag(m.default, 'mfe-one'), { name: 'mfe-one' }),
+    default: Sentry.withProfiler(m.default, { name: 'mfe-one' }),
   }))
 );
 const MfeTwo = lazy(() =>
   import('mfe_two/App').then(m => ({
-    default: Sentry.withProfiler(withMfeTag(m.default, 'mfe-two'), { name: 'mfe-two' }),
+    default: Sentry.withProfiler(m.default, { name: 'mfe-two' }),
   }))
 );
 const MfeThree = lazy(() =>
   import('mfe_three/App').then(m => ({
-    default: Sentry.withProfiler(withMfeTag(m.default, 'mfe-three'), { name: 'mfe-three' }),
+    default: Sentry.withProfiler(m.default, { name: 'mfe-three' }),
   }))
 );
 const MfeFour = lazy(() =>
   import('mfe_four/App').then(m => ({
-    default: Sentry.withProfiler(withMfeTag(m.default, 'mfe-four'), { name: 'mfe-four' }),
+    default: Sentry.withProfiler(m.default, { name: 'mfe-four' }),
   }))
 );
 

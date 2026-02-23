@@ -4,7 +4,7 @@ const color = '#f472b6';
 
 function MfeTwo() {
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/albums/1');
+    fetch('https://jsonplaceholder.typicode.com/todos/2');
   }, []);
 
   const [count, setCount] = useState(0);
